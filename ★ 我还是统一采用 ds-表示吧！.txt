@@ -1,0 +1,6 @@
+define-datatype自然生成了 constructors, types
+
+而 observer 可以根据cases语句、也可以自定义observer-functions
+
+;; ds表示：         变动的时候多改一下
+;; procedural表示： 压根无法新增observer !!! (因为它只对应一个observer: apply-env /  apply-procedure)

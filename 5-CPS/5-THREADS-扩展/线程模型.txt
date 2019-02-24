@@ -1,0 +1,30 @@
+  ;***********************************************************************************************************
+  ;  从线程的创建来说，有2种来源：一个是main，另一种是spawn创建的线程
+  
+  ;  ████线程总共有3种归属：
+  ;     1. running  
+  ;     2. runnable : 位于 %ready-quene           ████（Scheduler只是傻傻的负责按时切换%ready-quene上的threads）
+  ;     3. blocked  : 位于 某个mutex的wait-quene  ████ <wait ~ signal> 完成某个mutext的blocked threads的调度（不跑就blocked,跑完就移一个到%ready-quene）
+  ;                                               █?██     <wait ~ signal> 之间的region会被一个线程一次性跑完吗？？  No
+  ;                                               █>██        ★ 实际会被切换运行的线程为   （1）%ready-quene上的线程  （2）mutex的当前线程                                            
+
+  ;  【简单的模型】（无Mutex）
+  ;     所有的threads都放在 %ready-quene上，timeslice跑完就移到 %ready-quene末尾
+
+  ;  【带Mutex的模型】
+  ;     thread1 :   k-1a  >>  k-1b  >> k-1c  >> k-1d  >> k-1e  ...
+  ;     thread2 :   k-2a  >>  k-2b  >> k-2c  >> k-2d  >> k-2e  ...
+  ;     thread3 :   k-3a  >>  k-3b  >> k-3c  >> k-3d  >> k-3e  ...
+  ; 
+  ;         在其中“埋”一个 mutex，所有求值到此mutex的threads会被block !(若锁已关)
+  ;                               直到再求值到leave时，才把被block的线程重新放入ready quene
+  ;  效果： wait(mut1);  ####  ; signal(mut1);  间的代码只会有唯一的线程在跑
+  ;***********************************************************************************************************
+  
+  ;  ████ 所谓thread,不过就是一个 cont 而已，还是当成数据实体更好理解
+  ;  1. 只有一个cont在运行
+  ;  2. %ready-quene中的cont-s会被按时切换（自动计步）
+  ;  3. 有些cont会被blocked在同一个mutex，<wait ~ signal> 可以保证会跑到此region code的线程都不会来干扰
+
+
+  ;;***********************************************************************************************************
